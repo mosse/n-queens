@@ -25,9 +25,10 @@ window.findNRooksSolution = function(n) {
   var recurse = function(board) {
     // Initialize new board
     var newBoard = board;
+    var matrix = newBoard.rows();
 
     if (counter === n) {
-      solution = newBoard.rows().slice();
+      solution = matrix.slice();
       return;
     }
     // Base case: counter === n
@@ -45,10 +46,10 @@ window.findNRooksSolution = function(n) {
     //           Push new board into recursive function
     for (var row = 0; row < n; row++){
       for (var col = 0; col < n; col++){
-        if(newBoard.rows()[row][col] < 1){
-          newBoard.rows()[row][col] = 1;
+        if(matrix[row][col] < 1){
+          matrix[row][col] = 1;
           if (newBoard.hasAnyRowConflicts() || newBoard.hasAnyColConflicts()) {
-            newBoard.rows()[row][col] = 0; // equivalent to popping out value
+            matrix[row][col] = 0; // equivalent to popping out value
           } else {
             // recursive function
             counter++;
@@ -71,7 +72,61 @@ window.findNRooksSolution = function(n) {
 
 // return the number of nxn chessboards that exist, with n rooks placed such that none of them can attack each other
 window.countNRooksSolutions = function(n) {
-  var solutionCount = undefined; //fixme
+  // Create nxn chessboard
+  // Initialize solutionCount to 0
+  var board =  new Board({n: n});
+  var solutionCount = 0;
+
+  // Initialize iterate function
+  var iterate = function(workingBoard, iterator){
+    var matrix = workingBoard.rows();
+    for (var row = 0; row < n; row++){
+      for (var col = 0; col < n; col++){
+        iterator(matrix[row][col]);
+      }
+    }
+  };
+
+  // Call iterator on each square in board
+  iterate(board, function(startingSquare){
+    // Place 1 at startingSquare (our starting point)
+    startingSquare = 1;
+    console.log(board.rows());
+
+    // Initialize rooks count to 0
+    var rooksCount = 0;
+
+    // Initialize recurse function
+    var recurse = function(board){
+      // Set newBoard to board
+      var newBoard = board.slice();
+
+      // Base case:
+      // If we have n rooks on the board
+      if (rooksCount === n) {
+        // Board is complete; increment solutionCount
+        solutionCount++;
+        return;
+      }
+
+      // Call iterate on newBoard
+      iterate(newBoard, function(square) {
+        // If square has a value of 0, set it to 1
+        if (!square) {
+          square = 1;
+
+          // If there are conflicts, set square back to 0
+          if (newBoard.hasAnyRowConflicts() || newBoard.hasAnyColConflicts()) {
+            square = 0;
+          // Else increment counter and call recurse() again
+          } else {
+            rooksCount++;
+            recurse(newBoard);
+          }
+        }
+      });
+    };
+  });
 
   console.log('Number of solutions for ' + n + ' rooks:', solutionCount);
   return solutionCount;
@@ -81,7 +136,36 @@ window.countNRooksSolutions = function(n) {
 
 // return a matrix (an array of arrays) representing a single nxn chessboard, with n queens placed such that none of them can attack each other
 window.findNQueensSolution = function(n) {
-  var solution = undefined; //fixme
+  var solution = [];
+  var counter = 0;
+  var board = new Board({n: n});
+
+  var recurse = function(board){
+    var newBoard = board;
+    var matrix = newBoard.rows();
+    if (counter === n){
+      solution = matrix.slice();
+      return;
+    }
+    for (var row = 0 ; row < n ; row++){
+      for (var col = 0 ; col < n ; col++){
+        if(matrix[row][col] < 1){
+          matrix[row][col] = 1;
+          if (newBoard.hasAnyRowConflicts() ||
+            newBoard.hasAnyColConflicts() ||
+            newBoard.hasAnyMajorDiagonalConflicts() ||
+            newBoard.hasAnyMinorDiagonalConflicts()){
+            matrix[row][col] = 0;
+          } else {
+            counter++;
+            recurse(newBoard);
+          }
+        }
+      }
+    }
+  };
+
+  recurse(board);
 
   console.log('Single solution for ' + n + ' queens:', JSON.stringify(solution));
   return solution;
